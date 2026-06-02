@@ -1,0 +1,102 @@
+import pygame
+
+
+BG    = (18, 20, 28)
+WHITE = (240, 240, 240)
+GRAY  = (90, 95, 110)
+BLACK = (0, 0, 0)
+
+
+def draw_text(screen, text, font, color, center):
+    label = font.render(text, True, color)
+    screen.blit(label, label.get_rect(center=center))
+
+
+def draw_button(screen, font, text, rect, color, text_col=WHITE):
+    mouse = pygame.mouse.get_pos()
+    # éclaircit au survol
+    if rect.collidepoint(mouse):
+        color = tuple(min(255, c + 40) for c in color)
+    pygame.draw.rect(screen, color, rect, border_radius=10)
+    pygame.draw.rect(screen, WHITE, rect, width=2, border_radius=10)
+    draw_text(screen, text, font, text_col, rect.center)
+
+
+def clicked(rect, event):
+    return (event.type == pygame.MOUSEBUTTONDOWN and event.button == 1
+            and rect.collidepoint(event.pos))
+
+
+# ── Menu principal ───────────────────────────────────────
+def menu_principal(screen, clock):
+    W, H = screen.get_size()
+    title_font = pygame.font.SysFont("arialblack", 70)
+    btn_font   = pygame.font.SysFont("arial", 36, bold=True)
+
+    btn_jouer   = pygame.Rect(W//2 - 130, H//2 - 20, 260, 70)
+    btn_quitter = pygame.Rect(W//2 - 130, H//2 + 70, 260, 70)
+
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                return "quit"
+            if clicked(btn_jouer, event):
+                return "jouer"
+            if clicked(btn_quitter, event):
+                return "quit"
+
+        screen.fill(BG)
+        draw_text(screen, "F1 RACING", title_font, (255, 180, 0), (W//2, H//2 - 120))
+        draw_button(screen, btn_font, "JOUER",   btn_jouer,   (40, 120, 60))
+        draw_button(screen, btn_font, "QUITTER", btn_quitter, GRAY)
+
+        pygame.display.flip()
+        clock.tick(60)
+
+
+# ── Sélection de véhicule (boutons couleurs) ─────────────
+def selection_vehicule(screen, clock):
+    W, H = screen.get_size()
+    title_font = pygame.font.SysFont("arialblack", 50)
+    btn_font   = pygame.font.SysFont("arial", 28, bold=True)
+
+    # (nom, couleur)
+    vehicules = [
+        ("Rouge", (200, 40, 40)),
+        ("Vert",  (40, 160, 70)),
+        ("Bleu",  (50, 90, 210)),
+        ("Jaune", (220, 190, 40)),
+    ]
+
+    n = len(vehicules)
+    btn_w, btn_h, gap = 180, 180, 30
+    total = n * btn_w + (n - 1) * gap
+    start_x = (W - total) // 2
+    y = H // 2 - btn_h // 2
+    rects = [pygame.Rect(start_x + i * (btn_w + gap), y, btn_w, btn_h)
+             for i in range(n)]
+
+    btn_retour = pygame.Rect(40, H - 80, 160, 55)
+
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                return "quit"
+            if clicked(btn_retour, event):
+                return "back"
+            for i, rect in enumerate(rects):
+                if clicked(rect, event):
+                    return i   # index du véhicule choisi
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                return "back"
+
+        screen.fill(BG)
+        draw_text(screen, "CHOISIS TA VOITURE", title_font, WHITE, (W//2, 90))
+
+        for (nom, color), rect in zip(vehicules, rects):
+            draw_button(screen, btn_font, nom, rect, color)
+
+        draw_button(screen, btn_font, "← Retour", btn_retour, GRAY)
+
+        pygame.display.flip()
+        clock.tick(60)
