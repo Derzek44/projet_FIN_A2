@@ -1,10 +1,10 @@
 import math
 
-FRICTION = 0.98
-MAX_SPEED = 350.0
-ANGLE_BLEND = 0.15
-TURN_SPEED = 2.5
-ACCEL = 300.0
+FRICTION = 0.985
+MAX_SPEED = 1000.0
+TURN_SPEED = 3
+ACCEL = 500.0
+
 
 def limit_speed(vx, vy, max_speed):
     speed = math.sqrt(vx**2 + vy**2)
@@ -16,23 +16,27 @@ def limit_speed(vx, vy, max_speed):
         vy *= ratio
     return vx, vy
 
+
 def angle_from_velocity(vx, vy):
     if vx == 0 and vy == 0:
         return 0.0
     return math.atan2(vy, vx)
 
-def lerp_angle(a, b, t):
-    diff = (b - a + math.pi) % (2 * math.pi) - math.pi
-    return a + diff * t
 
-def update_physics(x, y, vx, vy, angle_control, go_up, dt):
+def update_physics(x, y, vx, vy, angle_control, go_up, dt, off_track=False):
+
     if go_up:
         vx += math.cos(angle_control) * ACCEL * dt
         vy += math.sin(angle_control) * ACCEL * dt
-    vx, vy = limit_speed(vx, vy, MAX_SPEED)
+
+    max_speed = MAX_SPEED
+    if off_track:
+        max_speed *= 0.4 
+    vx, vy = limit_speed(vx, vy, max_speed)
     x += vx * dt
     y += vy * dt
-    vx *= FRICTION
+    vx*= FRICTION
     vy *= FRICTION
     angle_velocity = angle_from_velocity(vx, vy)
+
     return x, y, vx, vy, angle_velocity
